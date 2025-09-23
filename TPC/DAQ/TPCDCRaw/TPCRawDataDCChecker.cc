@@ -138,6 +138,11 @@ int TPCRawDataDCChecker::process_event(PHCompositeNode *topNode)
     std::cout << "TPCRawDataDCChecker::Process_Event - Event not found" << std::endl;
     return -1;
   }
+
+//  std::cout<<"I am here "<< _event->getEvtType()<<std::endl;
+
+  if (Verbosity()) std::cout<< __PRETTY_FUNCTION__<<" : Event Type "<< _event->getEvtType() << std::endl;  /// special events
+
   if (_event->getEvtType() >= 8)  /// special events
   {
     return Fun4AllReturnCodes::DISCARDEVENT;
