@@ -40,7 +40,7 @@ for i in range(sz):
 
     actualBCO = BCO[i] + rollover * 1048576
 
-    RawList.append(['Raw', actualBCO, SumDig[i], NSampDig[i]])
+    RawList.append(['Raw:', actualBCO, SumDig[i], NSampDig[i]])
 
     prevBCO=BCO[i]
 
@@ -72,7 +72,7 @@ for i in range(sz2):
 
     actualBCO = BCO[i] + rollover * 1048576
 
-    RawList.append(['DCs', actualBCO, SumDig[i], NSampDig[i]])
+    RawList.append(['DCs:', actualBCO, SumDig[i], NSampDig[i]])
 
     prevBCO=BCO[i]
 
@@ -83,4 +83,4 @@ RawList2=sorted(RawList,key=lambda x: x[1])
 
 for i in range(sz+sz2):
 #    print(RawList[i])
-    print(RawList2[i][0],RawList2[i][1],RawList2[i][2])
+    print(RawList2[i][0],RawList2[i][1],RawList2[i][1],RawList2[i][2],RawList2[i][3])
