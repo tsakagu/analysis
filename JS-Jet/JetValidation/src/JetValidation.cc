@@ -262,9 +262,11 @@ int JetValidation::process_event(PHCompositeNode *topNode)
 
   //underlying event
   TowerBackground *background = findNode::getClass<TowerBackground>(topNode, "TowerInfoBackground_Sub2");
-  if(!background){
-    std::cout<<"Can't get background. Exiting"<<std::endl;
-    return Fun4AllReturnCodes::EVENT_OK;
+  if(m_doUnsubJet) {
+	  if(!background){
+    	std::cout<<"Can't get background. Exiting"<<std::endl;
+   		return Fun4AllReturnCodes::EVENT_OK;
+	  }
   }
 
   //get the event centrality/impact parameter from HIJING
@@ -310,7 +312,7 @@ int JetValidation::process_event(PHCompositeNode *topNode)
 	      nconst++;
 	      unsigned int channel = comp.second;
 	            
-	      if (comp.first == 15 ||  comp.first == 30)
+	      if (comp.first == 15 ||  comp.first == 30 || comp.first == 26)
 		{
 		  tower = towersIH3->get_tower_at_channel(channel);
 		  if(!tower || !tower_geom){
@@ -331,7 +333,7 @@ int JetValidation::process_event(PHCompositeNode *topNode)
 		  totalPy += pt * sin(tower_phi);
 		  totalPz += pt * sinh(tower_eta);
 		}
-	      else if (comp.first == 16 || comp.first == 31)
+	      else if (comp.first == 16 || comp.first == 31 || comp.first == 27)
 		{
 		  tower = towersOH3->get_tower_at_channel(channel);
 		  if(!tower || !tower_geomOH)
@@ -354,7 +356,7 @@ int JetValidation::process_event(PHCompositeNode *topNode)
 		  totalPy += pt * sin(tower_phi);
 		  totalPz += pt * sinh(tower_eta);
 		}
-	      else if (comp.first == 14 || comp.first == 29)
+	      else if (comp.first == 14 || comp.first == 29 || comp.first == 28)
 		{
 		  tower = towersEM3->get_tower_at_channel(channel);
 		  if(!tower || !tower_geom)
@@ -439,7 +441,7 @@ int JetValidation::process_event(PHCompositeNode *topNode)
     }
 
   //grab the gl1 data
-  Gl1Packet *gl1PacketInfo = findNode::getClass<Gl1Packet>(topNode, "GL1Packet");
+  Gl1Packet *gl1PacketInfo = findNode::getClass<Gl1Packet>(topNode, "14001");
   if (!gl1PacketInfo)
     {
       std::cout << PHWHERE << "caloTreeGen::process_event: GL1Packet node is missing. Output related to this node will be empty" << std::endl;

@@ -1,0 +1,9 @@
+path_to_bunch_dependent_yields_mbd=/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/analysis_complete_ana509_01312026_phenix_MBD_pt_l4_0mrad/fast_analysis_
+path_to_bunch_dependent_yields_photon = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/analysis_complete_ana509_01312026_phenix_efficiency_30_pt_g3_0mrad/fast_analysis_";
+path_to_fill_list_0mrad = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/run_to_fill_0mrad.txt";
+path_to_fill_list_15mrad = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/run_to_fill_15mrad.txt";
+path_to_spin_pattern_0mrad = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/spin_pattern_fill_0mrad.root";
+path_to_spin_pattern_15mrad = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/spin_pattern_fill_15mrad.root";
+path_to_csv_mean = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/csv_inputs";
+path_to_csv_ratios = "/sphenix/u/virgilemahaut/work/analysis/AnNeutralMeson/macros/comparison_micro_DST_analysis/nano_analysis/csv_ratios";
+suffix=_phenix

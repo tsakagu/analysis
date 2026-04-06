@@ -176,14 +176,19 @@ int analyze(int rn, int nseg, int clt)
   //TH1D* zhist;
   bool gothist = false;
   float nmbdc = 0;
+  float nocorN = 0;
   float nblair = 0;
   float ttseg = 0;
   int fillnum = get_fillnum(rn);
+  TFile* ingraph = TFile::Open("mbd_to_col_map.root");
+  TGraph* mbdcolmap = (TGraph*)ingraph->Get("mbdtogr1");
+  mbdcolmap->SetBit(TGraph::kIsSortedX);
   for(int i=1; i<nseg+1; ++i)
     {
       //cout << "start" << endl;
       //cout << "test1" << endl;
       TFile* file = TFile::Open(("/sphenix/user/jocl/projects/trigcount_files/"+to_string(rn)+"/triggercounter_5z_"+to_string(rn)+"_"+to_string(i)+(clt?"_clt":"")+".root").c_str());
+
       //cout << "test2" << endl;
       //cout << "gettree" << endl;
       TTree* tree = (TTree*)file->Get("_tree");
@@ -251,7 +256,7 @@ int analyze(int rn, int nseg, int clt)
 	  cout << "NBunch/rn: " << nBunch << " " << rn << endl;
 	}
       
-      if((rn >= 48863 && rn <= 48867) || (rn <= 51508 && rn >= 51506)) nBunch = 111;
+      if((rn >= 48863 && rn <= 48867) || (rn <= 51508 && rn >= 51506) || rn==52444) nBunch = 111;
       if(i==1)
 	{
 	  for(int j=0; j<64; ++j)
@@ -276,7 +281,8 @@ int analyze(int rn, int nseg, int clt)
 	}
       float avgTot[64] = {0};
       float rB = nBunch*78.2e3; //nBunch obtained from CAD tarball provided by Kin Yip
-      float rM = (seghiraw[10]-segloraw[10])/tSeg; //tSeg from BCO difference between start and end of segment * beam clock (9.4 MHz)
+      float rM = (seghiraw[10]-segloraw[10])/tSeg; //tSeg from BCO difference between start and end of segment * beam clock (9.4 MHz).
+      rM = mbdcolmap->Eval(rM);
       if(rM > rB)
 	{
 	  cout << "rM > rB!! " << rB << " " << rM << " " << tSeg << endl;
@@ -291,6 +297,7 @@ int analyze(int rn, int nseg, int clt)
 	  pSum += pow(-log(1-rM/rB),k) / factorial(k-1); //sum probability * number of collisions for rate
 	}
       //cout << endl;
+      float ncorrseg = 0;
       for(int j=0; j<64; ++j)
 	{
 	  for(int k=0; k<6; ++k)
@@ -304,21 +311,25 @@ int analyze(int rn, int nseg, int clt)
 	  if(j==10)
 	    {
 	      nmbdc += tSeg * (rB-rM) * pSum; //N_{coll} for trigger 10
+	      ncorrseg = tSeg * (rB-rM) * pSum;
+	      
 	      nblair += (seghiraw[j]-segloraw[j])*(1-log(1-rM/rB));
 	    }
 	}
       //cout << i << " " << sumgoodscaled[10] << " " << sumgoodscaled[18] << endl;
+      /*
       if(i%10 == 0)
 	{
 	  cout << "Segment " << i << " " << tSeg << " " << (rB - rM) << " " << pSum << " " << seghiraw[10] - segloraw[10] << endl;
 	}
-      //cout << "Run " << rn << " Segment " << i << " time: " << tSeg << " beam rate: " << rB << " bunches: " << nBunch <<" MBD live rate: " << rM << " Sum(n*p(n)): " << pSum << " lambda: " << -log(1-rM/rB) << endl
+      */
+      cout << "Run " << rn << " Segment " << i << " time: " << tSeg << " beam rate: " << rB << " bunches: " << nBunch <<" True collision rate: " << rM << " N_{corrected}: " << ncorrseg << " N_{uncorrected}: " << rM*tSeg << " ???: " << (seghiraw[10]-segloraw[10])*42/25.2 << endl;
       //cout << i << endl;
+      nocorN += tSeg*rM;
       file->Close();
       //cout << "closed" << endl;
     }
-      
-  cout << "sumgoodraw / nmbdc " << sumgoodraw[10] << " " << nmbdc << endl;
+  cout << "uncorrected / corrected total collisions " << nocorN << " " << nmbdc << endl;
   
   //int totalgood = zhist->Integral();
   for(int i=0; i<64; ++i)
@@ -345,6 +356,7 @@ int analyze(int rn, int nseg, int clt)
   outt->Branch("totembdlive",totembdlive,"totembdlive[5]/D");
   outt->Branch("nevt",&nevt,"nevt/l");
   outt->Branch("nmbdc",&nmbdc,"nmbdc/F");
+  outt->Branch("nocorN",&nocorN,"nocorN/F");
   outt->Branch("nblair",&nblair,"nblair/F");
   outt->Branch("ttseg",&ttseg,"ttseg/F");
   outt->Fill();

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NFILE=`cat fullgoodrunlist.list | wc -l`
+NFILE=`cat listrunnumber.txt | wc -l`
 
 BASENAME="condor_add"
 PREFIX="./subs"
