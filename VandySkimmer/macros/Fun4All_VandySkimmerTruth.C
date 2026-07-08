@@ -40,7 +40,7 @@ R__LOAD_LIBRARY(libjetbase.so)
 R__LOAD_LIBRARY(libjetbackground.so)
 R__LOAD_LIBRARY(libg4dst.so)
 
-void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string jetDSTlist, const std::string g4HitsDSTlist, const std::string globalDSTlist, const std::string outDir = "/sphenix/tg/tg01/jets/bkimelman/wEEC/", const std::string nfiles="25")
+void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string jetDSTlist, const std::string g4HitsDSTlist, const std::string globalDSTlist, const std::string outDir = "/sphenix/tg/tg01/jets/bkimelman/wEEC/", const std::string nfiles="25", const bool P_or_H=true)
 {
 
   bool doSim = true;
@@ -72,6 +72,7 @@ void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string 
 	  {
 		  if(temp2.find("data") == std::string::npos){
 			  sample_name = temp2;
+			  if(!P_or_H) sample_name="Herwig_"+sample_name;
 			  break;
 		  }
 	  }
@@ -121,7 +122,7 @@ void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string 
   se->registerSubsystem(rtcemc);
 
   JetReco *towerjetreco = new JetReco("towerJetReco");
-  TowerJetInput* emtji = new TowerJetInput(Jet::CEMC_TOWERINFO_RETOWER,"TOWERINFO_CALIB_RETOWER");
+  TowerJetInput* emtji = new TowerJetInput(Jet::CEMC_TOWERINFO_RETOWER,"TOWERINFO_CALIB");
   TowerJetInput* ohtji = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ihtji = new TowerJetInput(Jet::HCALOUT_TOWERINFO,"TOWERINFO_CALIB");
   emtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
@@ -134,6 +135,7 @@ void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string 
   towerjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.3), "AntiKt_r03");
   towerjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.4), "AntiKt_r04");
   towerjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.5), "AntiKt_r05");
+  towerjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.6), "AntiKt_r06");
   towerjetreco->set_algo_node("ANTIKT");
   towerjetreco->set_input_node("TOWER");
   towerjetreco->Verbosity(0);
@@ -175,6 +177,15 @@ void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string 
   jetCalib05->set_ApplyEtaDependentCalib(true);
   se->registerSubsystem(jetCalib05);
   
+  JetCalib *jetCalib06 = new JetCalib("JetCalib06");
+  jetCalib06->set_InputNode("AntiKt_r06");
+  jetCalib06->set_OutputNode("AntiKt_r06_calib");
+  jetCalib06->set_JetRadius(0.6);
+  jetCalib06->set_ZvrtxNode("GlobalVertexMap");
+  jetCalib06->set_ApplyZvrtxDependentCalib(true);
+  jetCalib06->set_ApplyEtaDependentCalib(true);
+  se->registerSubsystem(jetCalib06);
+  
   if(doSim)
   {
     JetReco *truthjetreco = new JetReco("truthJetReco");
@@ -183,6 +194,7 @@ void Fun4All_VandySkimmerTruth(const std::string caloDSTlist, const std::string 
     truthjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.3), "AntiKt_Truth_r03");
     truthjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.4), "AntiKt_Truth_r04");
     truthjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.5), "AntiKt_Truth_r05");
+    truthjetreco->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.6), "AntiKt_Truth_r06");
     truthjetreco->set_algo_node("ANTIKT");
     truthjetreco->set_input_node("TRUTH");
     truthjetreco->Verbosity(0);

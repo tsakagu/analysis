@@ -17,6 +17,9 @@ void JetInfo::CopyTo(JetInfo* jet)
         constit.push_back(cons);
     }
     jet->set_constituents(constit);
+    jet->set_parent(Parent);
+    jet->set_isQuark(IsQuark);
+    jet->set_parentPID(Parent_pID);
 
     return;
 }

@@ -16,22 +16,28 @@ using namespace std;
 
 static inline double wrapPhi_mpi_pi(double phi)
 {
+    if (!std::isfinite(phi))
+        return phi;
+
     const double pi = TMath::Pi();
     const double twopi = 2.0 * pi;
-    while (phi <= -pi)
+    phi = std::remainder(phi, twopi);
+    if (phi <= -pi)
         phi += twopi;
-    while (phi > pi)
+    else if (phi > pi)
         phi -= twopi;
     return phi;
 }
 
 static inline double wrapPhi_0_2pi(double phi)
 {
+    if (!std::isfinite(phi))
+        return phi;
+
     const double twopi = 2.0 * TMath::Pi();
-    while (phi < 0)
+    phi = std::fmod(phi, twopi);
+    if (phi < 0.0)
         phi += twopi;
-    while (phi >= twopi)
-        phi -= twopi;
     return phi;
 }
 

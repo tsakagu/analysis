@@ -13,25 +13,26 @@
 #include "../util/binning.h"
 #include "../util/DifferentialContainer.h"
 #include "../corrections/EfficiencyCorrection.h"
+#include "../corrections/GeoAcceptanceCorrection.h"
+#include "../corrections/LambdaFeedDownCorrection.h"
 
-void get_yield(TH1F* h_yield, int i, RooDataSet& ds, RooAddPdf model, std::string bkg_name, RooRealVar& mass, RooRealVar& bkgfrac)
+void get_yield(TH1F* h_yield, int i, RooDataSet& ds, RooAddPdf model, std::string bkg_name, RooRealVar& mass, RooRealVar& nSignal, RooRealVar& nBackground)
 {
   model.fitTo(ds);
 
-  double bkgfrac_fitted = bkgfrac.getVal();
-  double bkgfrac_err = bkgfrac.getError();
+  double nsignal = nSignal.getVal();
+  double nsignal_err = nSignal.getError();
 
-  std::cout << "val " << bkgfrac_fitted << std::endl;
-  std::cout << "err " << bkgfrac_err << std::endl;
+  double nbkg = nBackground.getVal();
+  double nbkg_err = nBackground.getError();
 
-  double nSignal = ds.sumEntries()*(1.-bkgfrac_fitted);
-  double err_nSignal = ds.sumEntries()*bkgfrac_err;
+  std::cout << "nsignal val " << nsignal << std::endl;
+  std::cout << "nsignal err " << nsignal_err << std::endl;
+  std::cout << "nbkg " << nbkg << std::endl;
+  std::cout << "nbkg err " << nbkg_err << std::endl;
 
-  std::cout << "bin content " << nSignal << std::endl;
-  std::cout << "bin error " << err_nSignal << std::endl;
-
-  h_yield->SetBinContent(i,nSignal);
-  h_yield->SetBinError(i,err_nSignal);
+  h_yield->SetBinContent(i,nsignal);
+  h_yield->SetBinError(i,nsignal_err);
 
   std::string name;
   if(i>=0) name = std::string(h_yield->GetName())+"_"+std::to_string(i);
@@ -48,7 +49,7 @@ void get_yield(TH1F* h_yield, int i, RooDataSet& ds, RooAddPdf model, std::strin
   plot->Write();
 }
 
-void get_yield_allbins(TH1F* h_yield, HistogramInfo& hinfo, RooDataSet& ds, RooAddPdf model, std::string bkg_name, RooRealVar& mass, RooRealVar& bkgfrac)
+void get_yield_allbins(TH1F* h_yield, HistogramInfo& hinfo, RooDataSet& ds, RooAddPdf model, std::string bkg_name, RooRealVar& mass, RooRealVar& nSignal, RooRealVar& nBackground)
 {
   for(int i=1; i<=h_yield->GetNbinsX(); i++)
   {
@@ -58,7 +59,7 @@ void get_yield_allbins(TH1F* h_yield, HistogramInfo& hinfo, RooDataSet& ds, RooA
 
     RooDataSet ds_selected = static_cast<RooDataSet&>(*(ds.reduce({mass},selection.c_str())));
 
-    get_yield(h_yield,i,ds_selected,model,bkg_name,mass,bkgfrac);
+    get_yield(h_yield,i,ds_selected,model,bkg_name,mass,nSignal,nBackground);
   }
 }
 
@@ -156,12 +157,12 @@ void calculate_ratios_withRooFit()
   //RooRealVar ks_cub_coef("ks_a2","a2",0.,-maxval,maxval);
   //RooPolynomial ks_bkg("ks_bkg","background",m_ks,RooArgList(ks_lin_coef,ks_quad_coef,ks_cub_coef));
 
-  //RooRealVar ks_nsig("ks_nsig","nsignal",100.,0.,1e9);
-  //RooRealVar ks_nbkg("ks_nbkg","nbkg",100.,0.,1e9);
+  RooRealVar ks_nsig("ks_nsig","nsignal",100.,0.,1e9);
+  RooRealVar ks_nbkg("ks_nbkg","nbkg",100.,0.,1e9);
   //RooAddPdf ks_massfit("ks_massfit","combined signal and background",RooArgList(ks_bkg,ks_signal),RooArgList(ks_nsig,ks_nbkg));
 
-  RooRealVar ks_bkgfrac("ks_bkgfrac","background fraction",0.01,0.,1.);
-  RooAddPdf ks_model("ks_model","combined signal and background",RooArgList(ks_bkg,ks_signal),ks_bkgfrac);
+  //RooRealVar ks_bkgfrac("ks_bkgfrac","background fraction",0.01,0.,1.);
+  RooAddPdf ks_model("ks_model","combined signal and background",RooArgList(ks_bkg,ks_signal),RooArgList(ks_nsig,ks_nbkg));
 
   // Lambda signal and background models
   RooRealVar lambda_mean("lambda_mean","mean",1.113,1.11,1.12);
@@ -183,8 +184,10 @@ void calculate_ratios_withRooFit()
   //RooRealVar lambda_bkg_frac("lambda_bkg_frac","background fraction",0.5,0.,1.);
   //RooAddPdf lambda_massfit("lambda_massfit","combined signal and background",RooArgList(lambda_bkg,lambda_signal),lambda_bkg_frac);
 
-  RooRealVar lambda_bkgfrac("lambda_bkgfrac","background fraction",0.1,0.,1.);
-  RooAddPdf lambda_model("lambda_model","combined signal and background",RooArgList(lambda_bkg,lambda_signal),lambda_bkgfrac);
+  RooRealVar lambda_nsig("lambda_nsig","nsignal",100,0.,1e9);
+  RooRealVar lambda_nbkg("lambda_nbkg","nbkg",100,0.,1e9);
+  //RooRealVar lambda_bkgfrac("lambda_bkgfrac","background fraction",0.1,0.,1.);
+  RooAddPdf lambda_model("lambda_model","combined signal and background",RooArgList(lambda_bkg,lambda_signal),RooArgList(lambda_nsig,lambda_nbkg));
   /*
   // Import histograms as RooDataHists
   RooDataHist ks_hist("ks_hist","ks_hist",m_ks,RooFit::Import(*Ks_mass));
@@ -195,8 +198,8 @@ void calculate_ratios_withRooFit()
 
   TH1F* all_Ks = makeHistogram(BinInfo::mass_bins.at("K_S0"));
   TH1F* all_Lambda = makeHistogram(BinInfo::mass_bins.at("Lambda0"));
-  get_yield(all_Ks,-1,Ks_ds,ks_model,"ks_bkg",m_ks,ks_bkgfrac);
-  get_yield(all_Lambda,-1,lambda_ds,lambda_model,"lambda_bkg",m_lambda,lambda_bkgfrac);
+  get_yield(all_Ks,-1,Ks_ds,ks_model,"ks_bkg",m_ks,ks_nsig,ks_nbkg);
+  get_yield(all_Lambda,-1,lambda_ds,lambda_model,"lambda_bkg",m_lambda,lambda_nsig,lambda_nbkg);
 
   all_Ks->SetTitle("#Lambda^{0} mass;mass [GeV/c^{2}];Candidates");
   all_Lambda->SetTitle("K_{S}^{0} mass;mass [GeV/c^{2}];Candidates");
@@ -204,34 +207,115 @@ void calculate_ratios_withRooFit()
   for(size_t i=0; i<yield_hinfo.size(); i++)
   {
     std::cout << "======= Differential " << Ks_yields[i]->GetName() << " =======" << std::endl;
-    get_yield_allbins(Ks_yields[i],yield_hinfo[i],Ks_ds,ks_model,"ks_bkg",m_ks,ks_bkgfrac);
+    get_yield_allbins(Ks_yields[i],yield_hinfo[i],Ks_ds,ks_model,"ks_bkg",m_ks,ks_nsig,ks_nbkg);
     std::cout << "======= Differential " << lambda_yields[i]->GetName() << " =======" << std::endl;
-    get_yield_allbins(lambda_yields[i],yield_hinfo[i],lambda_ds,lambda_model,"lambda_bkg",m_lambda,lambda_bkgfrac);
+    get_yield_allbins(lambda_yields[i],yield_hinfo[i],lambda_ds,lambda_model,"lambda_bkg",m_lambda,lambda_nsig,lambda_nbkg);
+  }
+
+  // Lambda yield feed-down correction from cascade decays
+
+  std::vector<TH1F*> lambda_yields_corrected;
+  for(TH1F* h : lambda_yields)
+  {
+    std::string newname = std::string(h->GetName())+"_corrected";
+    std::string newtitle = std::string(h->GetTitle())+", corrected";
+    TH1F* new_h = (TH1F*)h->Clone(newname.c_str());
+    new_h->SetTitle(newtitle.c_str());
+    lambda_yields_corrected.push_back(new_h);
+  }
+
+  std::cout << "CLONED!" << std::endl;
+
+  std::string fd_filename = "/sphenix/tg/tg01/hf/hjheng/HF-analysis/simulation/Pythia_ppMinBias/cascade_feeddown/Cascade_feeddown_fraction.root";
+  std::vector<LambdaFeedDownCorrection> fd_corr =
+  {
+    LambdaFeedDownCorrection(fd_filename,"h_feeddown_frac_xi_all"),
+    LambdaFeedDownCorrection(fd_filename,"h_feeddown_frac_xi_eta_all"),
+    LambdaFeedDownCorrection(fd_filename,"h_feeddown_frac_xi_rapidity_all"),
+    LambdaFeedDownCorrection(fd_filename,"h_feeddown_frac_xi_phi_all")
+  };
+
+  std::cout << "GOT CORRECTIONS!" << std::endl;
+
+  for(int idiff=0; idiff<yield_hinfo.size(); idiff++)
+  {
+    for(int ibin=1; ibin<=lambda_yields[idiff]->GetNbinsX(); ibin++)
+    {
+      float yield = lambda_yields[idiff]->GetBinContent(ibin);
+      float lowedge = lambda_yields[idiff]->GetBinLowEdge(ibin);
+      float upedge = lowedge + lambda_yields[idiff]->GetBinWidth(ibin);
+      std::cout << yield << ", " << lowedge << ", " << upedge << std::endl;
+
+      std::pair<float,float> corr_and_err = fd_corr[idiff].get_correction_and_error(lowedge,upedge);
+      std::cout << corr_and_err.first << ", " << corr_and_err.second << std::endl;
+      float corr_yield = yield*(1.-corr_and_err.first);
+      float corr_err = corr_yield * sqrt(pow(lambda_yields[idiff]->GetBinError(ibin)/yield,2.)+pow(corr_and_err.second/corr_and_err.first,2.));
+
+      lambda_yields_corrected[idiff]->SetBinContent(ibin,corr_yield);
+      lambda_yields_corrected[idiff]->SetBinError(ibin,corr_err);
+    }
   }
 
   TH1F* lambdaKsratio = new TH1F("integrated_lambdaKs_ratio","Integrated #Lambda/K_{S}^{0} Ratio",1,0.,1.);
 
   std::vector<TH1F*> lambdaKs_diffratios;
+  std::vector<TH1F*> lambdaKs_diffratios_corrected;
   for(HistogramInfo& hinfo : yield_hinfo) lambdaKs_diffratios.push_back(makeHistogram("lambdaKsratio","#Lambda/K_{S}^{0} Ratio",hinfo));
+  for(HistogramInfo& hinfo : yield_hinfo) lambdaKs_diffratios_corrected.push_back(makeHistogram("lambdaKsratio_corrected","#Lambda/K_{S}^{0} Ratio, corrected",hinfo));
 
-  for(size_t i=0; i<yield_hinfo.size(); i++)
+  for(size_t idiff=0; idiff<yield_hinfo.size(); idiff++)
   {
-    lambdaKs_diffratios[i]->Divide(lambda_yields[i],Ks_yields[i],1.,2.);
+    for(size_t ibin=1; ibin<=lambdaKs_diffratios[idiff]->GetNbinsX(); ibin++)
+    {
+      float ratio = lambda_yields[idiff]->GetBinContent(ibin)/(2.*Ks_yields[idiff]->GetBinContent(ibin));
+      float ratio_err = ratio * sqrt(pow(lambda_yields[idiff]->GetBinError(ibin)/lambda_yields[idiff]->GetBinContent(ibin),2.)+pow(Ks_yields[idiff]->GetBinError(ibin)/Ks_yields[idiff]->GetBinContent(ibin),2.));
+      lambdaKs_diffratios[idiff]->SetBinContent(ibin,ratio);
+      lambdaKs_diffratios[idiff]->SetBinError(ibin,ratio_err);
+      lambdaKs_diffratios_corrected[idiff]->SetBinContent(ibin,ratio);
+      lambdaKs_diffratios_corrected[idiff]->SetBinError(ibin,ratio_err);
+    }
   }
 
-  EfficiencyCorrection eff_corr;
+  EfficiencyCorrection eff_corr; // pt only for now
+
+  std::vector<GeoAcceptanceCorrection> acc_corr = {
+    GeoAcceptanceCorrection("/sphenix/u/cdean/analysis/LightFlavorRatios/geometric_acceptance/analysis/plots/Lambda0_to_KS0_geometric_acceptance_ratio.root","pT"),
+    GeoAcceptanceCorrection("/sphenix/u/cdean/analysis/LightFlavorRatios/geometric_acceptance/analysis/plots/Lambda0_to_KS0_geometric_acceptance_ratio_eta.root","Lambda0_inGeo_#eta"),
+    GeoAcceptanceCorrection("/sphenix/u/cdean/analysis/LightFlavorRatios/geometric_acceptance/analysis/plots/Lambda0_to_KS0_geometric_acceptance_ratio_rap.root","Lambda0_inGeo_y"),
+    GeoAcceptanceCorrection("/sphenix/u/cdean/analysis/LightFlavorRatios/geometric_acceptance/analysis/plots/Lambda0_to_KS0_geometric_acceptance_ratio_phi.root","Lambda0_inGeo_#phi")
+  };
+
   // apply efficiency correction to pT-dependent ratio
-  for(size_t i=1; i<=lambdaKs_diffratios[0]->GetNbinsX(); i++)
+  for(size_t idiff = 0; idiff<yield_hinfo.size(); idiff++)
   {
-    float ratio = lambdaKs_diffratios[0]->GetBinContent(i);
-    float ratio_err = lambdaKs_diffratios[0]->GetBinError(i);
-    float pt = lambdaKs_diffratios[0]->GetBinCenter(i);
-    float eff = eff_corr.get_eff(pt);
-    float eff_err = eff_corr.get_eff_error(pt);
-    std::cout << "ratio " << ratio << " err " << ratio_err << " pt " << pt << " eff " << eff << " err " << eff_err << std::endl;
-    std::cout << "new val " << ratio/eff << " err " << ratio/eff*sqrt(pow(ratio_err/ratio,2.)+pow(eff_err/eff,2.)) << std::endl;
-    lambdaKs_diffratios[0]->SetBinContent(i,ratio/eff);
-    lambdaKs_diffratios[0]->SetBinError(i,ratio/eff*sqrt(pow(ratio_err/ratio,2.)+pow(eff_err/eff,2.)));
+    for(size_t i=1; i<=lambdaKs_diffratios_corrected[idiff]->GetNbinsX(); i++)
+    {
+      float ratio = lambdaKs_diffratios_corrected[idiff]->GetBinContent(i);
+      float ratio_err = lambdaKs_diffratios_corrected[idiff]->GetBinError(i);
+      float xval = lambdaKs_diffratios_corrected[idiff]->GetBinCenter(i);
+      float xlow = lambdaKs_diffratios_corrected[idiff]->GetBinLowEdge(i);
+      float xhigh = xlow + lambdaKs_diffratios_corrected[idiff]->GetBinWidth(i);
+
+      float eff = 1.;
+      float eff_err = 0.;
+
+      if(idiff==0) // eff correction only for vs. pT for now
+      {
+        eff = eff_corr.get_eff(xval);
+        eff_err = eff_corr.get_eff_error(xval);
+      }
+      std::pair<float,float> acc_and_err = acc_corr[idiff].get_acceptance_and_error(xlow,xhigh);
+      float acc = acc_and_err.first;
+      float acc_err = acc_and_err.second;
+
+      float corrected_ratio = ratio / (eff*acc);
+      float corrected_err = ratio / (eff*acc) * sqrt(pow(ratio_err/ratio,2.)+pow(eff_err/eff,2.)+pow(acc_err/acc,2.));
+
+      std::cout << "ratio " << ratio << " err " << ratio_err << " xval " << xval << " eff " << eff << " err " << eff_err << " acc " << acc << " err " << acc_err << std::endl;
+      std::cout << "new val " << corrected_ratio << " err " << corrected_err << std::endl;
+      lambdaKs_diffratios_corrected[idiff]->SetBinContent(i,corrected_ratio);
+      lambdaKs_diffratios_corrected[idiff]->SetBinError(i,corrected_err);
+    }
   }
 
   if (blind)
@@ -240,17 +324,21 @@ void calculate_ratios_withRooFit()
     std::unique_ptr<gsl_rng> m_rng;
     m_rng.reset(gsl_rng_alloc(gsl_rng_mt19937));
     gsl_rng_set(m_rng.get(), seed);
-    float blind_par = gsl_rng_uniform_pos(m_rng.get()) - 0.5; //Take a value anywhere between -0.5 and 0.5
+    float blind_par = fabs(gsl_rng_uniform_pos(m_rng.get()) - 0.5); //Take a value anywhere between -0.5 and 0.5
 
     for(size_t i=0; i<yield_hinfo.size(); i++)
     {
       for (int j=1;  j<=lambdaKs_diffratios[i]->GetNbinsX(); j++)
       {
         float content = lambdaKs_diffratios[i]->GetBinContent(j);
+        float content_corrected = lambdaKs_diffratios_corrected[i]->GetBinContent(j);
         lambdaKs_diffratios[i]->SetBinContent(j, content + blind_par);
+        lambdaKs_diffratios_corrected[i]->SetBinContent(j,content_corrected + blind_par);
       }
     }
   }
+
+  fout->cd();
 
   all_Ks->Write();
   all_Lambda->Write();
@@ -260,9 +348,11 @@ void calculate_ratios_withRooFit()
     //phi_yields[i]->Write();
     Ks_yields[i]->Write();
     lambda_yields[i]->Write();
+    lambda_yields_corrected[i]->Write();
 
     //phiKs_diffratios[i]->Write();
     lambdaKs_diffratios[i]->Write();
+    lambdaKs_diffratios_corrected[i]->Write();
   }
 
 /*

@@ -42,7 +42,7 @@ void plot_results()
   gStyle->SetImageScaling(2.);
   //SetsPhenixStyle();
 
-  bool finalize = true;
+  bool finalize = false;
 
   std::string outdir;
   if(finalize) outdir = "/sphenix/tg/tg01/hf/mjpeters/LightFlavorResults/plots";
@@ -58,8 +58,8 @@ void plot_results()
     BinInfo::final_phi_bins
   };
 
-  std::vector<std::vector<RooPlot*>> Ks_fits = get_all_fits_all_variables(f,"Ks",variables);
-  std::vector<std::vector<RooPlot*>> lambda_fits = get_all_fits_all_variables(f,"Lambda",variables);
+  std::vector<std::vector<RooPlot*>> Ks_fits = get_all_fits_all_variables(f,"K_S0",variables);
+  std::vector<std::vector<RooPlot*>> lambda_fits = get_all_fits_all_variables(f,"Lambda0",variables);
 
   for(int i=0; i<variables.size(); i++)
   {
@@ -84,13 +84,14 @@ void plot_results()
 
     TCanvas* c1 = new TCanvas("c1","c1",npix_x,npix_y);
     c1->Divide(nbins/3+1,3);
-/*
-    for(int bin=1; bin<=nbins; bin++)
-    {
-      c->cd(bin+nbins);
-      phi_fits[i][bin-1]->Draw();
-    }
-*/
+
+
+    //for(int bin=1; bin<=nbins; bin++)
+    //{
+    //  c->cd(bin+nbins);
+    //  phi_fits[i][bin-1]->Draw();
+    //}
+
     for(int bin=1; bin<=nbins; bin++)
     {
       c1->cd(bin);
@@ -111,15 +112,63 @@ void plot_results()
     (TH1F*)f->Get("lambdaKsratio_vspseudorapidity"),
     (TH1F*)f->Get("lambdaKsratio_vsphi"),
     (TH1F*)f->Get("lambdaKsratio_vsrapidity"),
-    (TH1F*)f->Get("Ks_yield_vspT"),
-    (TH1F*)f->Get("Ks_yield_vspseudorapidity"),
-    (TH1F*)f->Get("Ks_yield_vsphi"),
-    (TH1F*)f->Get("Ks_yield_vsrapidity"),
-    (TH1F*)f->Get("Lambda_yield_vspT"),
-    (TH1F*)f->Get("Lambda_yield_vspseudorapidity"),
-    (TH1F*)f->Get("Lambda_yield_vsphi"),
-    (TH1F*)f->Get("Lambda_yield_vsrapidity"),
+
+    (TH1F*)f->Get("K_S0_yield_vspT"),
+    (TH1F*)f->Get("K_S0_yield_vspseudorapidity"),
+    (TH1F*)f->Get("K_S0_yield_vsphi"),
+    (TH1F*)f->Get("K_S0_yield_vsrapidity"),
+    (TH1F*)f->Get("Lambda0_yield_vspT"),
+    (TH1F*)f->Get("Lambda0_yield_vspseudorapidity"),
+    (TH1F*)f->Get("Lambda0_yield_vsphi"),
+    (TH1F*)f->Get("Lambda0_yield_vsrapidity"),
+
   };
+
+  std::vector<std::pair<std::string,std::string>> doubleplot_names = 
+  {
+    {"lambdaKsratio_vspT","lambdaKsratio_feeddown_acc_eff_corrected_vspT"},
+    {"lambdaKsratio_vspseudorapidity","lambdaKsratio_feeddown_acc_eff_corrected_vspseudorapidity"},
+    {"lambdaKsratio_vsphi","lambdaKsratio_feeddown_acc_eff_corrected_vsphi"},
+    {"lambdaKsratio_vsrapidity","lambdaKsratio_feeddown_acc_eff_corrected_vsrapidity"},
+    {"Lambda_yield_vspT","Lambda_yield_vspT_corrected"},
+    {"Lambda_yield_vspseudorapidity","Lambda_yield_vspseudorapidity_corrected"},
+    {"Lambda_yield_vsrapidity","Lambda_yield_vsrapidity_corrected"},
+    {"Lambda_yield_vsphi","Lambda_yield_vsphi_corrected"}
+  };
+
+  std::vector<std::pair<std::string,std::string>> correction_types =
+  {
+    {"","Uncorrected"},
+    //{"_acc","Geo. acceptance"},
+    //{"_eff","Efficiency"},
+    {"_lambdafeeddowncorrected","#Lambda feed-down"},
+    //{"_acc_eff","Geo. acceptance + efficiency"},
+    //{"_feeddown_acc","Geo. acceptance + #Lambda feed-down"},
+    {"_lambdafeeddowncorrected_effcorrected","Efficiency + #Lambda feed-down"},
+    {"_lambdafeeddowncorrected_effcorrected_geoacceptancecorrected","Geo. acceptance + efficiency + #Lambda feed-down"},
+    {"_lambdafeeddowncorrected_effcorrected_geoacceptancecorrected_cutefficiencycorrected","Geo. acceptance + efficiency +#Lambda feed-down + cut selection efficiency"}
+  };
+
+  std::vector<std::vector<std::pair<TH1F*,std::string>>> multiplots;
+
+  for(int i=0; i<variables.size(); i++)
+  {
+    multiplots.emplace_back();
+    for(int j=0; j<correction_types.size(); j++)
+    {
+      std::pair<std::string,std::string> pr = correction_types[j];
+      std::string hname = "lambdaKsratio_vs"+variables[i].name+pr.first;
+      std::cout << "fetching " << hname << std::endl;
+      TH1F* h = (TH1F*)f->Get(hname.c_str());
+      multiplots[i].push_back({h,pr.second});
+    }
+  }
+
+  std::vector<std::pair<TH1F*,TH1F*>> double_plots;
+  for(std::pair<std::string,std::string>& name : doubleplot_names)
+  {
+    double_plots.push_back(std::make_pair((TH1F*)f->Get(name.first.c_str()),(TH1F*)f->Get(name.second.c_str())));
+  }
 
   for(TH1F* h : single_plots)
   {
@@ -143,4 +192,99 @@ void plot_results()
     c->SaveAs(filename_pdf.c_str());
     c->SaveAs(filename_png.c_str());
   }
+/*
+  for(std::pair<TH1F*,TH1F*> pair : double_plots)
+  {
+    pair.first->SetMarkerColor(kBlack);
+    pair.first->SetLineColor(kBlack);
+    pair.first->SetMarkerStyle(kFullCircle);
+    pair.first->SetMarkerSize(0.7);
+    pair.first->SetMinimum(0.);
+
+    pair.second->SetMarkerColor(kRed);
+    pair.second->SetLineColor(kRed);
+    pair.second->SetMarkerStyle(kFullCircle);
+    pair.second->SetMarkerSize(0.7);
+    pair.second->SetMinimum(0.);
+    pair.second->SetMaximum(1.2*std::max(pair.first->GetMaximum(),pair.second->GetMaximum()));
+
+    pair.second->Draw();
+    pair.first->Draw("SAME");
+
+    TLatex latex;
+    latex.SetNDC();           // Use normalized coordinates
+    latex.SetTextSize(0.04); // Adjust size as needed
+    latex.SetTextAlign(13);   // Left-top alignment
+    latex.DrawLatex(0.68, 0.93, "#it{#bf{sPHENIX}} internal");
+    latex.DrawLatex(0.68, 0.90, "#it{p+p} #sqrt{200} GeV");
+
+    TLegend* l = new TLegend(0.2,0.2,0.4,0.3);
+    l->AddEntry(pair.first,"Uncorrected","lep");
+    l->AddEntry(pair.second,"Corrected","lep");
+    l->Draw();
+
+    std::string filename_pdf = outdir+"/pdf/"+std::string(pair.second->GetName())+".pdf";
+    std::string filename_png = outdir+"/png/"+std::string(pair.second->GetName())+".png";
+
+    c->SaveAs(filename_pdf.c_str());
+    c->SaveAs(filename_png.c_str());
+  }
+*/
+  //gStyle->SetPalette(90);
+
+  std::vector<Color_t> colors = {
+    kBlack,
+    kRed,
+    kOrange,
+    kBlue,
+    kGreen+2
+  };
+
+  for(int i=0; i<multiplots.size(); i++)
+  {
+    // find max max
+    float max_max = 0.;
+    for(int j=0; j<multiplots[i].size(); j++)
+    {
+      float this_max = multiplots[i][j].first->GetMaximum();
+      if(this_max>max_max)
+      {
+        max_max = this_max;
+      }
+    }
+    for(int j=0; j<multiplots[i].size(); j++)
+    {
+      TH1F* h = multiplots[i][j].first;
+      h->SetMinimum(0.);
+      h->SetMaximum(1.2*max_max);
+      h->SetMarkerSize(0.7);
+      h->SetMarkerStyle(kFullCircle);
+      h->SetLineColor(colors[j]);
+      h->SetMarkerColor(colors[j]);
+
+      if(j==0) h->Draw();
+      else h->Draw("SAME");
+    }
+
+    TLatex latex;
+    latex.SetNDC();           // Use normalized coordinates
+    latex.SetTextSize(0.04); // Adjust size as needed
+    latex.SetTextAlign(13);   // Left-top alignment
+    latex.DrawLatex(0.68, 0.93, "#it{#bf{sPHENIX}} internal");
+    latex.DrawLatex(0.68, 0.90, "#it{p+p} #sqrt{200} GeV");
+
+    TLegend* l = new TLegend(0.6,0.7,0.95,0.85);
+    for(int j=0; j<multiplots[i].size(); j++)
+    {
+      l->AddEntry(multiplots[i][j].first->GetName(),multiplots[i][j].second.c_str(),"lep");
+    }
+    l->Draw();
+
+    std::string png_filename = outdir+"/png/ratio_allcorrections_vs"+variables[i].name+".png";
+    std::string pdf_filename = outdir+"/pdf/ratio_allcorrections_vs"+variables[i].name+".pdf";
+
+    c->SaveAs(png_filename.c_str());
+    c->SaveAs(pdf_filename.c_str());
+  }
+
 }

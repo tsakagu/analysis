@@ -223,6 +223,18 @@ struct TrackletCombiDROutput
     TH1D *hDCA3DHelix_Bkg = nullptr;          // integrated 3D DCA of pi-rotated background doublets from lightweight helix fit
     TH1D *hSilSeedDCA3D = nullptr;            // integrated PCA-to-associated-vertex distance for silicon seeds
     std::vector<TH1D *> hSilSeedDCA3D_truthVtxZ; // simulation-only PCA-to-associated-vertex distance for silicon seeds by truth vertex z range
+    TH1D *hSilSeed_Eta = nullptr;        // selected-crossing silicon-seed eta w.r.t. vertex
+    TH1D *hSilSeed_Eta_nMVTX3nINTT2 = nullptr;
+    TH1D *hSilSeed_Eta_nMVTX3nINTT1 = nullptr;
+    TH1D *hSilSeed_Eta_nMVTX2nINTT2 = nullptr;
+    TH1D *hSilSeed_Eta_nMVTX2nINTT1 = nullptr;
+    TH1D *hSilSeed_Eta_nMVTXnINTTOther = nullptr;
+    TH1D *hAllSilSeed_Eta = nullptr;
+    TH1D *hAllSilSeed_Eta_nMVTX3nINTT2 = nullptr;
+    TH1D *hAllSilSeed_Eta_nMVTX3nINTT1 = nullptr;
+    TH1D *hAllSilSeed_Eta_nMVTX2nINTT2 = nullptr;
+    TH1D *hAllSilSeed_Eta_nMVTX2nINTT1 = nullptr;
+    TH1D *hAllSilSeed_Eta_nMVTXnINTTOther = nullptr;
     TH2D *hSeed_Eta_Phi = nullptr;       // diagnostic 2D distribution of seed hit eta vs phi (unrotated)
     TH2D *hSilSeed_Eta_Phi = nullptr;    // silicon-seed eta/phi from ntuple (matched by trackerVertexTrackIDs -> silseed_id)
     TH2D *hSilSeed_Eta_Phi_nMVTX3nINTT2 = nullptr;
@@ -468,7 +480,8 @@ static inline std::vector<MultiplicityPercentileBin> LoadMultiplicityPercentileB
 static inline void InitTrackletCombiDROutput(TrackletCombiDROutput &out,                    //
                                              const TrackletCombiDRConfig &cfg,              //
                                              const std::string &name_prefix = "tklCombiDR", //
-                                             bool make_primary_charged_hist = false         //
+                                             bool make_primary_charged_hist = false,        //
+                                             bool make_seed_eta_1d_hists = true             //
 )
 {
     const double twopi = 2.0 * TMath::Pi();
@@ -488,6 +501,18 @@ static inline void InitTrackletCombiDROutput(TrackletCombiDROutput &out,        
     const std::string nDCA3DHelixSig = name_prefix + "_DCA3DHelix_Sig";
     const std::string nDCA3DHelixBkg = name_prefix + "_DCA3DHelix_Bkg";
     const std::string nSilSeedDCA3D = name_prefix + "_SilSeedDCA3D";
+    const std::string nSilSeedEta = name_prefix + "_SilSeedEta";
+    const std::string nSilSeedEta_nMVTX3nINTT2 = name_prefix + "_SilSeedEta_nMVTX3nINTT2";
+    const std::string nSilSeedEta_nMVTX3nINTT1 = name_prefix + "_SilSeedEta_nMVTX3nINTT1";
+    const std::string nSilSeedEta_nMVTX2nINTT2 = name_prefix + "_SilSeedEta_nMVTX2nINTT2";
+    const std::string nSilSeedEta_nMVTX2nINTT1 = name_prefix + "_SilSeedEta_nMVTX2nINTT1";
+    const std::string nSilSeedEta_nMVTXnINTTOther = name_prefix + "_SilSeedEta_nMVTXnINTTOther";
+    const std::string nAllSilSeedEta = name_prefix + "_AllSilSeedEta";
+    const std::string nAllSilSeedEta_nMVTX3nINTT2 = name_prefix + "_AllSilSeedEta_nMVTX3nINTT2";
+    const std::string nAllSilSeedEta_nMVTX3nINTT1 = name_prefix + "_AllSilSeedEta_nMVTX3nINTT1";
+    const std::string nAllSilSeedEta_nMVTX2nINTT2 = name_prefix + "_AllSilSeedEta_nMVTX2nINTT2";
+    const std::string nAllSilSeedEta_nMVTX2nINTT1 = name_prefix + "_AllSilSeedEta_nMVTX2nINTT1";
+    const std::string nAllSilSeedEta_nMVTXnINTTOther = name_prefix + "_AllSilSeedEta_nMVTXnINTTOther";
     const std::string nSilSeedEtaPhi = name_prefix + "_SilSeedEtaPhi";
     const std::string nSilSeedEtaPhi_nMVTX3nINTT2 = name_prefix + "_SilSeedEtaPhi_nMVTX3nINTT2";
     const std::string nSilSeedEtaPhi_nMVTX3nINTT1 = name_prefix + "_SilSeedEtaPhi_nMVTX3nINTT1";
@@ -535,6 +560,21 @@ static inline void InitTrackletCombiDROutput(TrackletCombiDROutput &out,        
             out.hSilSeedDCA3D_truthVtxZ.push_back(hist);
         }
     }
+    if (make_seed_eta_1d_hists)
+    {
+        out.hSilSeed_Eta = MakeTH1D(nSilSeedEta, 70, -3.5, 3.5);
+        out.hSilSeed_Eta_nMVTX3nINTT2 = MakeTH1D(nSilSeedEta_nMVTX3nINTT2, 70, -3.5, 3.5);
+        out.hSilSeed_Eta_nMVTX3nINTT1 = MakeTH1D(nSilSeedEta_nMVTX3nINTT1, 70, -3.5, 3.5);
+        out.hSilSeed_Eta_nMVTX2nINTT2 = MakeTH1D(nSilSeedEta_nMVTX2nINTT2, 70, -3.5, 3.5);
+        out.hSilSeed_Eta_nMVTX2nINTT1 = MakeTH1D(nSilSeedEta_nMVTX2nINTT1, 70, -3.5, 3.5);
+        out.hSilSeed_Eta_nMVTXnINTTOther = MakeTH1D(nSilSeedEta_nMVTXnINTTOther, 70, -3.5, 3.5);
+        out.hAllSilSeed_Eta = MakeTH1D(nAllSilSeedEta, 70, -3.5, 3.5);
+        out.hAllSilSeed_Eta_nMVTX3nINTT2 = MakeTH1D(nAllSilSeedEta_nMVTX3nINTT2, 70, -3.5, 3.5);
+        out.hAllSilSeed_Eta_nMVTX3nINTT1 = MakeTH1D(nAllSilSeedEta_nMVTX3nINTT1, 70, -3.5, 3.5);
+        out.hAllSilSeed_Eta_nMVTX2nINTT2 = MakeTH1D(nAllSilSeedEta_nMVTX2nINTT2, 70, -3.5, 3.5);
+        out.hAllSilSeed_Eta_nMVTX2nINTT1 = MakeTH1D(nAllSilSeedEta_nMVTX2nINTT1, 70, -3.5, 3.5);
+        out.hAllSilSeed_Eta_nMVTXnINTTOther = MakeTH1D(nAllSilSeedEta_nMVTXnINTTOther, 70, -3.5, 3.5);
+    }
     out.hSeed_Eta_Phi = MakeEtaPhiTH2D(name_prefix + "_SeedEtaPhi", cfg.etaAxis, cfg.phiAxis);
     out.hSilSeed_Eta_Phi = MakeEtaPhiTH2D(nSilSeedEtaPhi, cfg.etaAxis, cfg.phiAxis);
     out.hSilSeed_Eta_Phi_nMVTX3nINTT2 = MakeEtaPhiTH2D(nSilSeedEtaPhi_nMVTX3nINTT2, cfg.etaAxis, cfg.phiAxis);
@@ -557,6 +597,21 @@ static inline void InitTrackletCombiDROutput(TrackletCombiDROutput &out,        
     SetAxisTitles(out.hDCA3DHelix_Sig, "3D DCA from lightweight helix fit to selected silicon vertex [cm]", "Counts");
     SetAxisTitles(out.hDCA3DHelix_Bkg, "3D DCA from lightweight helix fit to selected silicon vertex [cm]", "Counts");
     SetAxisTitles(out.hSilSeedDCA3D, "|PCA - associated silicon vertex| [cm]", "Counts");
+    if (make_seed_eta_1d_hists)
+    {
+        SetAxisTitles(out.hSilSeed_Eta, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hSilSeed_Eta_nMVTX3nINTT2, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hSilSeed_Eta_nMVTX3nINTT1, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hSilSeed_Eta_nMVTX2nINTT2, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hSilSeed_Eta_nMVTX2nINTT1, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hSilSeed_Eta_nMVTXnINTTOther, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hAllSilSeed_Eta, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hAllSilSeed_Eta_nMVTX3nINTT2, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hAllSilSeed_Eta_nMVTX3nINTT1, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hAllSilSeed_Eta_nMVTX2nINTT2, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hAllSilSeed_Eta_nMVTX2nINTT1, "#eta_{silseed,vtx}", "Counts");
+        SetAxisTitles(out.hAllSilSeed_Eta_nMVTXnINTTOther, "#eta_{silseed,vtx}", "Counts");
+    }
     SetAxisTitles(out.hSeed_Eta_Phi, "#eta_{seed}", "#phi_{seed} (rad)", "Counts");
     SetAxisTitles(out.hSilSeed_Eta_Phi, "#eta_{silseed,vtx}", "#phi_{silseed,vtx} (rad)", "Counts");
     SetAxisTitles(out.hSilSeed_Eta_Phi_nMVTX3nINTT2, "#eta_{silseed,vtx}", "#phi_{silseed,vtx} (rad)", "Counts");
@@ -896,6 +951,18 @@ static inline void WriteTracklets_CombinatoricDR_OutputToDirectory(const Trackle
     WriteIfValid(out.hSilSeedDCA3D);
     for (auto *h : out.hSilSeedDCA3D_truthVtxZ)
         WriteIfValid(h);
+    WriteIfValid(out.hSilSeed_Eta);
+    WriteIfValid(out.hSilSeed_Eta_nMVTX3nINTT2);
+    WriteIfValid(out.hSilSeed_Eta_nMVTX3nINTT1);
+    WriteIfValid(out.hSilSeed_Eta_nMVTX2nINTT2);
+    WriteIfValid(out.hSilSeed_Eta_nMVTX2nINTT1);
+    WriteIfValid(out.hSilSeed_Eta_nMVTXnINTTOther);
+    WriteIfValid(out.hAllSilSeed_Eta);
+    WriteIfValid(out.hAllSilSeed_Eta_nMVTX3nINTT2);
+    WriteIfValid(out.hAllSilSeed_Eta_nMVTX3nINTT1);
+    WriteIfValid(out.hAllSilSeed_Eta_nMVTX2nINTT2);
+    WriteIfValid(out.hAllSilSeed_Eta_nMVTX2nINTT1);
+    WriteIfValid(out.hAllSilSeed_Eta_nMVTXnINTTOther);
     WriteIfValid(out.hSeed_Eta_Phi);
     WriteIfValid(out.hSilSeed_Eta_Phi);
     WriteIfValid(out.hSilSeed_Eta_Phi_nMVTX3nINTT2);

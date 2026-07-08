@@ -179,7 +179,7 @@ static void DrawSeedClusterDisplay(TGraph *gr_clus_xy_all,                      
     {
         gr_clus_xy_all->SetMarkerStyle(20);
         gr_clus_xy_all->SetMarkerSize(0.8);
-        gr_clus_xy_all->SetMarkerColorAlpha(kBlack,0.3);
+        gr_clus_xy_all->SetMarkerColorAlpha(kBlack, 0.3);
         gr_clus_xy_all->Draw("P SAME");
     }
 
@@ -433,10 +433,10 @@ static void DrawSeedClusterDisplay(TGraph *gr_clus_xy_all,                      
 //                       const std::string &plotdir_base = "./figure/figure-seeddisplay", //
 //                       const std::string &crossing_filter = ""                          //
 // )
-void plot_seeddisplay(const std::string &inputfile = "/sphenix/tg/tg01/hf/hjheng/ppg-dNdEta-OOpp/TrackletAna-HistOutput/simulation/ACTS/hist_0.root", //
-                      const bool is_simulation_flag = true,                                                                                           //
-                      const std::string &plotdir_base = "./figure/figure-seeddisplay",                                                                //
-                      const std::string &crossing_filter = ""                                                                                         //
+void plot_seeddisplay(const std::string &inputfile = "/sphenix/tg/tg01/hf/hjheng/ppg-dNdEta-OOpp/TrackletAna-HistOutput/simulation/ACTS/cotThetaMax4p0//hist_0.root", //
+                      const bool is_simulation_flag = true,                                                                                                           //
+                      const std::string &plotdir_base = "./figure/figure-seeddisplay-cotThetaMax4p0",                                                                 //
+                      const std::string &crossing_filter = ""                                                                                                         //
 )
 {
     gStyle->SetOptStat(0);
@@ -557,9 +557,7 @@ void plot_seeddisplay(const std::string &inputfile = "/sphenix/tg/tg01/hf/hjheng
             reco_zr_graphs.push_back(dynamic_cast<TGraph *>(crossing_dir->Get(reco_zr_names[i].c_str())));
         }
 
-        const int n_intt_clusters = is_simulation_flag
-                                        ? ((gr_primary_intt_xy ? gr_primary_intt_xy->GetN() : 0) + (gr_nonprimary_intt_xy ? gr_nonprimary_intt_xy->GetN() : 0))
-                                        : (gr_all_xy ? gr_all_xy->GetN() : 0);
+        const int n_intt_clusters = is_simulation_flag ? ((gr_primary_intt_xy ? gr_primary_intt_xy->GetN() : 0) + (gr_nonprimary_intt_xy ? gr_nonprimary_intt_xy->GetN() : 0)) : (gr_all_xy ? gr_all_xy->GetN() : 0);
 
         std::vector<std::string> info;
         info.push_back(BuildCrossingLabel(crossing_key, is_simulation_flag));

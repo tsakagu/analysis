@@ -39,7 +39,7 @@ R__LOAD_LIBRARY(libjetbase.so)
 R__LOAD_LIBRARY(libjetbackground.so)
 R__LOAD_LIBRARY(libg4dst.so)
 
-void Fun4All_VandySkimmerTruthCounter(const std::string caloDSTlist, const std::string jetDSTlist, const std::string g4HitsDSTlist, const std::string globalDSTlist, const std::string outDir = "/sphenix/tg/tg01/jets/bkimelman/wEEC/", const std::string nfiles="25")
+void Fun4All_VandySkimmerTruthCounter(const std::string caloDSTlist, const std::string jetDSTlist, const std::string g4HitsDSTlist, const std::string globalDSTlist, const std::string outDir = "/sphenix/tg/tg01/jets/bkimelman/wEEC/", const std::string nfiles="25", const bool P_or_H = true)
 {
 
   bool doSim = true;
@@ -71,6 +71,7 @@ void Fun4All_VandySkimmerTruthCounter(const std::string caloDSTlist, const std::
 	  {
 		  if(temp2.find("data") == std::string::npos){
 			  sample_name = temp2;
+			  if(!P_or_H) sample_name = "Herwig"+sample_name;
 			  break;
 		  }
 	  }
@@ -94,11 +95,13 @@ void Fun4All_VandySkimmerTruthCounter(const std::string caloDSTlist, const std::
   
   dummy* dm = new dummy(); 
   se->registerSubsystem(dm);
-  se->run(12);
+  se->run(0);
   se->End();
   int n_events=dm->n_evts;
-  std::string end_text=std::format("~/{}_starting_seg_{}.txt", sample_name, seg);
-  std::fstream outfile (end_text);
+  std::string end_text=sample_name+"_starting_seg_"+std::to_string(seg)+".txt";
+  std::cout<<end_text<<std::endl;
+  ofstream outfile (end_text.c_str());
+  if(!outfile.is_open()) std::cout<<"Couldn't open the file" <<std::endl;
   outfile<<n_events<<std::endl;
   std::cout<<dm->n_evts<<std::endl;
   outfile.close();
