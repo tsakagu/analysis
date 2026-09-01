@@ -42,7 +42,7 @@ R__LOAD_LIBRARY(libsimqa_modules.so)
 
 int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lambdaKshort")
 {
-  int nEvents = -1;
+  int nEvents = 1000;
 
   int ndigits = 6;
   //std::string infile_base_reco = "/sphenix/tg/tg01/hf/mjpeters/lambdaKshortMB/G4Hits_pileup_sample/DST_TRKR_G4HIT_pythia8_NONE-0000000029-";
@@ -55,11 +55,16 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
   std::string infile_reco = infile_base_reco+processID+".root";
   std::string infile_truth = infile_base_truth+processID+".root";
 
-  std::string outDir = "/sphenix/tg/tg01/hf/mjpeters/lambdaKshortMB/" + channel + "_20260422_DetroitMB_CR_2_mode_pTref_1p4/";
+  //std::string outDir = "/sphenix/tg/tg01/hf/mjpeters/lambdaKshortMB/" + channel + "_20260422_DetroitMB_CR_2_mode_pTref_1p4/";
+  //std::string outDir = "./";
+
+  std::string outDir = "/sphenix/tg/tg01/hf/mjpeters/LightFlavorProduction/closureTestSample/";
 
   string makeDirectory = "mkdir -p " + outDir + "hfEff";
   system(makeDirectory.c_str());
   makeDirectory = "mkdir -p " + outDir + "evaluator";
+  system(makeDirectory.c_str());
+  makeDirectory = "mkdir -p " + outDir + "DST";
   system(makeDirectory.c_str());
 
   //F4A setup
@@ -77,15 +82,15 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
   //Input::PILEUPRATE = 3e6;
 
 
-  Input::READHITS = true;
+  Input::READHITS = false;
   //INPUTREADHITS::filename[0] = infile;
   INPUTREADHITS::filename[0] = infile_reco;
   INPUTREADHITS::filename[1] = infile_truth;
 
   std::cout << "readhits ssetup" << std::endl;
-  Input::SIMPLE = false;
-/*
-  //Input::PYTHIA8 = true;
+  Input::SIMPLE = true;
+
+  Input::PYTHIA8 = true;
   int particleID = 421;
   PYTHIA8::config_file[0] = "steeringCards/pythia8_MB_Detroit_Tony.cfg";
   if (channel == "Kshort2pipi")
@@ -124,7 +129,7 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
     exit(1); 
   }
   Input::BEAM_CONFIGURATION = Input::pp_COLLISION;
-*/
+
   InputInit();
 
   std::cout << "input init" << std::endl;
@@ -208,7 +213,18 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
   Input::BEAM_CONFIGURATION = Input::pp_COLLISION;
   Enable::MVTX_APPLYMISALIGNMENT = true;
 
-  //Input::ApplysPHENIXBeamParameter(INPUTGENERATOR::Pythia8[0]);
+  Input::ApplysPHENIXBeamParameter(INPUTGENERATOR::Pythia8[0]);
+
+  if(Input::SIMPLE)
+  {
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(310,20);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3122,10);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(-3122,10);
+    INPUTGENERATOR::SimpleEventGenerator[0]->set_reuse_existing_vertex(true);
+    INPUTGENERATOR::SimpleEventGenerator[0]->set_eta_range(-1.,1.);
+    INPUTGENERATOR::SimpleEventGenerator[0]->set_phi_range(-M_PI,M_PI);
+    INPUTGENERATOR::SimpleEventGenerator[0]->set_pt_range(0.,5.);
+  }
 
   InputRegister();
 
@@ -326,11 +342,8 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
   if (run_ppi_reco || run_anti_ppi_reco) reconstruct_ppi_mass();
   //if (run_anti_ppi_reco) reconstruct_ppi_mass();
   if (run_cascade_reco) reconstruct_Lambdapi_mass();
-/*
-  //Output file handling
-  makeDirectory = "mkdir -p " + outDir + "DST";
-  system(makeDirectory.c_str());
 
+  //Output file handling
   string FullOutFile = outDir + "/DST/" + channel + "_DST_" + processID + ".root";
   Fun4AllDstOutputManager *out = new Fun4AllDstOutputManager("DSTOUT", FullOutFile);
   out->StripNode("G4HIT_PIPE");
@@ -347,7 +360,7 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
   out->StripNode("TRKR_HITTRUTHASSOC");
   //out->StripNode("TRKR_CLUSTER");
   //out->StripNode("TRKR_CLUSTERHITASSOC");
-  out->StripNode("TRKR_CLUSTERCROSSINGASSOC");
+  //out->StripNode("TRKR_CLUSTERCROSSINGASSOC");
   out->StripNode("TRAINING_HITSET");
   out->StripNode("TRKR_TRUTHTRACKCONTAINER");
   out->StripNode("TRKR_TRUTHCLUSTERCONTAINER");
@@ -361,7 +374,7 @@ int Fun4All_HFG_MB(std::string processID = "000000", std::string channel = "lamb
   out->StripNode("SvtxAlignmentStateMap");
   //out->SaveRunNode(0);
   se->registerOutputManager(out);
-*/
+
   se->run(nEvents);
 
   se->End();

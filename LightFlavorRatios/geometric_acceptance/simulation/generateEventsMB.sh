@@ -6,7 +6,7 @@ export USER="$(id -u -n)"
 export LOGNAME=${USER}
 export HOME=/sphenix/u/${LOGNAME}
 
-export SPHENIX=${HOME}/sPHENIX
+export SPHENIX=${HOME}
 export MYINSTALL=$SPHENIX/install
 export LD_LIBRARY_PATH=$MYINSTALL/lib:$LD_LIBRARY_PATH
 export ROOT_INCLUDE_PATH=$MYINSTALL/include:$ROOT_INCLUDE_PATH
